@@ -34,7 +34,7 @@ class DataGraphSAINT:
         self.adj_test = adj_full[np.ix_(idx_test, idx_test)]
 
         feat = np.load(dataset_str+'feats.npy')
-        # ---- normalize feat ----
+        
         feat_train = feat[idx_train]
         scaler = StandardScaler()
         scaler.fit(feat_train)
@@ -168,7 +168,7 @@ class Data2Pyg:
 class Dpr2Pyg(InMemoryDataset):
 
     def __init__(self, dpr_data, transform=None, **kwargs):
-        root = 'data/' # dummy root; does not mean anything
+        root = 'data/' 
         self.dpr_data = dpr_data
         super(Dpr2Pyg, self).__init__(root, transform)
         pyg_data = self.process()
@@ -178,7 +178,7 @@ class Dpr2Pyg(InMemoryDataset):
     def process(self):
         dpr_data = self.dpr_data
         edge_index = torch.LongTensor(dpr_data.adj.nonzero())
-        # by default, the features in pyg data is dense
+        
         if sp.issparse(dpr_data.features):
             x = torch.FloatTensor(dpr_data.features.todense()).float()
         else:

@@ -12,7 +12,7 @@ from tqdm import tqdm
 from models.gcn import GCN
 from models.sgc import SGC
 from models.sgc_multi import SGC as SGC1
-# from models.parametrized_adj import IGNR
+
 from models.IGNR import GraphonLearner as IGNR
 import scipy.sparse as sp
 from torch_sparse import SparseTensor
@@ -26,16 +26,16 @@ class SGDD:
         self.args = args
         self.device = device
 
-        # n = data.nclass * args.nsamples
-        # n = int(data.feat_train.shape[0] * args.reduction_rate) * data.nclass
+        
+        
         n = int(data.feat_train.shape[0] * args.reduction_rate) 
-        # from collections import Counter; print(Counter(data.labels_train))
+        
 
         d = data.feat_train.shape[1]
         self.nnodes_syn = n
         self.feat_syn = nn.Parameter(torch.FloatTensor(n, d).to(device))
 
-        # self.IGNR = IGNR(nfeat=d, nnodes=n, device=device,args=args).to(device)
+        
         self.IGNR = IGNR(node_feature=d, nfeat=128, nnodes=n, device=device, args=args).to(device)
         self.graphon = 1
 
@@ -44,20 +44,20 @@ class SGDD:
         self.reset_parameters()
         self.optimizer_feat = torch.optim.Adam([self.feat_syn], lr=args.lr_feat)
 
-        # self.optimizer_IGNR = torch.optim.Adam(self.IGNR.net0.parameters(), lr=args.lr_adj)
+        
         self.optimizer_IGNR = torch.optim.Adam(self.IGNR.parameters(), lr=args.lr_adj)
-        # self.optimizer_ignr = torch.optim.Adam([*self.IGNR.net1.parameters(), self.IGNR.P], lr=args.lr_adj)
-        # self.optimizer_IGNR = torch.optim.AdamW([{"params":self.IGNR.net1.parameters(), "lr":1e-6}, 
-        #                                         {"params":self.IGNR.P.parameters(), "lr":1e-6"}, 
-        #                                         {"params":self.IGNR.net0.parameters(), "lr":args.lr_adj}], lr=args.lr_adj)
-        # [{"params":self.IGNR.net1.parameters(), "lr":1e-6}, {"params":self.IGNR.P.parameters(), "lr":1e-6"}, 
-        #                                         {"params":self.IGNR.net0.parameters(), "lr":args.lr_adj}]
-        # self.optimizer_IGNR = torch.optim.AdamW([
-        #             {'params': self.IGNR.net1.parameters(), 'lr': 1e-6}, 
-        #             {'params': self.IGNR.P, 'lr': 1e-6},
-        #             {'params': self.IGNR.net0.parameters()}],
-        #             lr=args.lr_adj,
-        #     )
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         print('adj_syn:', (n,n), 'feat_syn:', self.feat_syn.shape)
 
     def reset_parameters(self):
@@ -95,7 +95,7 @@ class SGDD:
         feat_syn, IGNR, labels_syn = self.feat_syn.detach(), \
                                 self.IGNR, self.labels_syn
 
-        # with_bn = True if args.dataset in ['ogbn-arxiv'] else False
+        
         model = GCN(nfeat=feat_syn.shape[1], nhid=self.args.hidden, dropout=0.5,
                     weight_decay=5e-4, nlayers=2,
                     nclass=data.nclass, device=device).to(device)
@@ -120,8 +120,8 @@ class SGDD:
             n = len(labels_syn)
             adj_syn = torch.zeros((n, n))
 
-        # model.fit_with_val(feat_syn, adj_syn, labels_syn, data,
-        #              train_iters=600, normalize=True, verbose=False)
+        
+        
         model.fit_with_val(feat_syn, adj_syn, labels_syn, data,
                      train_iters=2000, normalize=False, verbose=True)
 
@@ -138,7 +138,7 @@ class SGDD:
                   "accuracy= {:.4f}".format(acc_train.item()))
         res.append(acc_train.item())
 
-        # Full graph
+        
         output = model.predict(data.feat_full, data.adj_full)
         loss_test = F.nll_loss(output[data.idx_test], labels_test)
         acc_test = utils.accuracy(output[data.idx_test], labels_test)
@@ -176,13 +176,13 @@ class SGDD:
         outer_loop, inner_loop = get_loops(args)
         loss_avg = 0
 
-        # IGNR.train()
-        # for _ in range(self.args.ignr_epochs):
-        #     self.optimizer_ignr.zero_grad()
-        #     adj_syn, opt_loss = IGNR(self.feat_syn, Lx=adj)
-        #     # print(opt_loss.item())
-        #     opt_loss.backward()
-        #     self.optimizer_ignr.step()
+        
+        
+        
+        
+        
+        
+        
 
         for it in trange(args.epochs+1):
             if args.dataset in ['ogbn-arxiv']:
@@ -212,28 +212,28 @@ class SGDD:
 
 
             for ol in range(outer_loop):
-                # adj_syn = IGNR(self.feat_syn, Lx=adj)
+                
                 if adj.size(0) > 5000:
                     random_nodes = np.random.choice(list(range(adj.size(0))), 5000, replace=False)
                     adj_syn, opt_loss = IGNR(self.feat_syn, Lx=adj[random_nodes].to_dense()[:, random_nodes])
                 else:
                     adj_syn, opt_loss = IGNR(self.feat_syn, Lx=adj)
                 
-                # adj_syn, opt_loss = IGNR(self.feat_syn)
+                
                 adj_syn_norm = utils.normalize_adj_tensor(adj_syn, sparse=False)
                 feat_syn_norm = feat_syn
 
 
                 BN_flag = False
                 for module in model.modules():
-                    if 'BatchNorm' in module._get_name(): #BatchNorm
+                    if 'BatchNorm' in module._get_name(): 
                         BN_flag = True
                 if BN_flag:
-                    model.train() # for updating the mu, sigma of BatchNorm
+                    model.train() 
                     output_real = model.forward(features, adj_norm)
                     for module in model.modules():
-                        if 'BatchNorm' in module._get_name():  #BatchNorm
-                            module.eval() # fix mu and sigma of every BatchNorm layer
+                        if 'BatchNorm' in module._get_name():  
+                            module.eval() 
 
                 loss = torch.tensor(0.0).to(self.device)
                 for c in range(data.nclass):
@@ -259,7 +259,7 @@ class SGDD:
                     loss += coeff  * match_loss(gw_syn, gw_real, args, device=self.device)
 
                 loss_avg += loss.item()
-                # TODO: regularize
+                
                 if args.beta > 0:
                     loss_reg = args.beta * regularization(adj_syn, utils.tensor2onehot(labels_syn).to(adj_syn.device))
                 else:
@@ -267,15 +267,15 @@ class SGDD:
 
                 loss = loss + loss_reg
 
-                # update sythetic graph
+                
                 self.optimizer_feat.zero_grad()
                 self.optimizer_IGNR.zero_grad()
                 if it % 50 < 10:
-                    # loss.backward(retain_graph=True)
-                    # opt_loss.backward()
+                    
+                    
                     loss = loss + args.opt_scale* opt_loss
-                    # opt_loss.backward(retain_graph=True)
-                    # opt_loss.backward()
+                    
+                    
                     loss.backward()
                     self.optimizer_IGNR.step()
                 else:
@@ -286,8 +286,8 @@ class SGDD:
                     print('Gradient matching loss:', loss.item())
 
                 if ol == outer_loop - 1:
-                    # print('loss_reg:', loss_reg.item())
-                    # print('Gradient matching loss:', loss.item())
+                    
+                    
                     break
 
                 feat_syn_inner = feat_syn.detach()
@@ -299,19 +299,19 @@ class SGDD:
                     output_syn_inner = model.forward(feat_syn_inner_norm, adj_syn_inner_norm)
                     loss_syn_inner = F.nll_loss(output_syn_inner, labels_syn)
                     loss_syn_inner.backward()
-                    # print(loss_syn_inner.item())
-                    optimizer_model.step() # update gnn param
+                    
+                    optimizer_model.step() 
 
 
             loss_avg /= (data.nclass*outer_loop)
             if it % 50 == 0:
                 print('Epoch {}, loss_avg: {}'.format(it, loss_avg))
 
-            # eval_epochs = [400, 600, 800, 1000, 1200, 1600, 2000, 3000, 4000, 5000]
+            
 
             eval_epochs = list(range(0, 5000, 50))
             if verbose and it in eval_epochs:
-            # if verbose and (it+1) % 50 == 0:
+            
                 res = []
                 runs = 1 if args.dataset in ['ogbn-arxiv'] else 3
                 for i in range(runs):
@@ -339,13 +339,9 @@ class SGDD:
         idx_selected = np.array(idx_selected).reshape(-1)
         features = features[self.data.idx_train][idx_selected]
 
-        # adj_knn = torch.zeros((data.nclass*args.nsamples, data.nclass*args.nsamples)).to(self.device)
-        # for i in range(data.nclass):
-        #     idx = np.arange(i*args.nsamples, i*args.nsamples+args.nsamples)
-        #     adj_knn[np.ix_(idx, idx)] = 1
 
         from sklearn.metrics.pairwise import cosine_similarity
-        # features[features!=0] = 1
+        
         k = 2
         sims = cosine_similarity(features.cpu().numpy())
         sims[(np.arange(len(sims)), np.arange(len(sims)))] = 0
@@ -357,8 +353,6 @@ class SGDD:
 
 
 def get_loops(args):
-    # Get the two hyper-parameters of outer-loop and inner-loop.
-    # The following values are empirically good.
     if args.one_step:
         if args.dataset =='ogbn-arxiv':
             return 5, 0
@@ -366,7 +360,7 @@ def get_loops(args):
     if args.dataset in ['ogbn-arxiv']:
         return args.outer, args.inner
     if args.dataset in ['cora']:
-        return 20, 15 # sgc
+        return 20, 15 
     if args.dataset in ['citeseer']:
         return 20, 15
     if args.dataset in ['physics']:

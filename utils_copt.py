@@ -1,7 +1,4 @@
 
-'''
-Utilities functions for the framework.
-'''
 import pandas as pd
 import numpy as np
 import os
@@ -18,17 +15,17 @@ warnings.filterwarnings('ignore')
 
 import pdb
 
-# torch.set_default_tensor_type('torch.DoubleTensor')
-# torch_dtype = torch.float64 #torch.float32
+
+
 
 res_dir = 'results'
 data_dir = 'data'
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-#device = 'cpu' #Can set to CPU here for timing comparison
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    #
+    
     parser.add_argument("--verbose", dest='verbose', action='store_const', default=False, const=True, help='Print out verbose info during optimization')
     parser.add_argument("--seed", dest='fix_seed', action='store_const', default=False, const=True, help='Fix seed for reproducibility and fair comparison.')
     parser.add_argument("--n_epochs", dest='n_epochs', type=int, default=300, help='Number of COPT iterations during training.')
@@ -61,8 +58,8 @@ def create_graph_lap(n):
     Create graph laplacian of given size.
     """
     g = nx.random_geometric_graph(n, .5)
-    #pdb.set_trace()
-    #ensure connected!
+    
+    
     Lx = nx.laplacian_matrix(g, range(n))
     Lx = np.array(Lx.todense())
     Lx = np.array([[0, -.3, -.9],[-.3, 0, 0],[-.9, 0,0]])
@@ -74,7 +71,7 @@ def graph_to_lap(g):
     """
     if not isinstance(g, nx.Graph):
         g = nx.from_numpy_array(g)
-    Lx = nx.laplacian_matrix(g).todense()  #args.Lx[torch.eye(len(args.Lx), dtype=torch.uint8)] = args.Lx.sum(0)    
+    Lx = nx.laplacian_matrix(g).todense()  
     Lx = torch.from_numpy(Lx).to(dtype=torch_dtype)
     return Lx
 
@@ -87,11 +84,6 @@ def lap_to_graph(L):
     return nx.from_numpy_array(-L)
 
 def canonicalize_mx(mx):
-    """
-    Sort columns then rows to canonicalize mx. 
-    Ensures symmetry.
-    Square PSD matrix.
-    """
     mx1 = mx.clone()
     diag = mx.diag()
     idx = diag.argsort(dim=0)
@@ -105,9 +97,6 @@ def canonicalize_mx(mx):
     return mx 
     
 def create_graph(n, gtype=None, seed=None, params={}):
-    """
-    Generate graph on n nodes of given type.
-    """
     total_iter = 100
     cnt = 0
     while True:
@@ -125,13 +114,13 @@ def create_graph(n, gtype=None, seed=None, params={}):
         elif gtype == 'strogatz':
             g = nx.connected_watts_strogatz_graph(n, max(n//4, 3), p=.05, seed=seed)
         elif gtype == 'random_regular':
-            #d = max(n//4, 2)  d*n must be even
+            
             d = max(n//8, 2)
             if n*d % 2 == 1:
                 n += 1
             g = nx.random_regular_graph(d, n, seed=seed)
         elif gtype == 'binomial':
-            #also erdos renyi graph
+            
             prob = params['prob']
             g = nx.binomial_graph(n, prob, seed=seed)
         elif gtype == 'barabasi':
@@ -144,14 +133,14 @@ def create_graph(n, gtype=None, seed=None, params={}):
             clique_sz = params['clique_sz']
             assert n_cliques * clique_sz == n
             g = nx.connected_caveman_graph(n_cliques, clique_sz)
-        #elif gtype == 'binomial': 
-        #    prob = params['prob']
-        #    g = nx.binomial_graph(n, prob, seed=seed)
+        
+        
+        
         elif gtype == 'random_geometric': 
             radius = params['radius']
             g = nx.random_geometric_graph(n, radius, seed=seed)
         elif gtype == 'barbell': 
-            #note these are not numbers of nodes!
+            
             g = nx.barbell_graph(n//2, 1)
         elif gtype == 'ladder': 
             g = nx.ladder_graph(n)            
@@ -181,16 +170,13 @@ def create_graph(n, gtype=None, seed=None, params={}):
     return g
 
 def fetch_data(dataset_name):
-    #this assumes data lap file exists.
-    #torch.save({'lap':lap_l, 'labels':node_labels, 'target':target}, '{}_lap.pt'.format(dataset_name))
+    
+    
     data = torch.load('{}_lap.pt'.format(dataset_name))
     return data['lap'], data['labels'], data['target']
 
 def fetch_data_graphs(dataset_name):
-    """
-    #this assumes data (graph laplacians) are have been created or downloaded to file dataname_lap.pt.
-    """
-    #torch.save({'lap':lap_l, 'labels':node_labels, 'target':target}, '{}_lap.pt'.format(dataset_name))
+    
     try:
         data = torch.load('data/{}_lap.pt'.format(dataset_name))
     except Exception:
@@ -208,38 +194,33 @@ def fetch_data_graphs(dataset_name):
     return graphs, data['labels'], np.array(data['target'])
 
 def view_graph(L, soft_edge=False, labels=None, name=''):
-    """
-    Input:
-    L: laplacian. Square Tensor (not upper triangular)
-    labels: node labels.
-    """
     plt.clf()
     if isinstance(L, torch.Tensor):        
         L = L.cpu().numpy()
     L = L.copy()
-    #make diagonal 0?! negate?
+    
     np.fill_diagonal(L, 0)
     L *= -1
-    #pdb.set_trace()
+    
     g = nx.from_numpy_array(L)
     fig = plt.figure()
     plt.axis('off')
     ax = plt.gca()
-    #ax.axis('off')
-    #layout = nx.kamada_kawai_layout(g)
+    
+    
     layout = nx.spring_layout(g)
     nx.draw_networkx_nodes(g, layout, node_size=500, alpha=0.5, cmap=plt.cm.RdYlGn, node_color='r', ax=ax)
     if labels is None:        
         nx.draw_networkx_labels(g, layout, font_color='w', font_weight='bold', font_size=15, ax=ax)
     else:
-        #labels can be determined from P
-        nx.draw_networkx_labels(g, layout, labels=labels, font_color='k', font_size=12, ax=ax) #13
+        
+        nx.draw_networkx_labels(g, layout, labels=labels, font_color='k', font_size=12, ax=ax) 
     if soft_edge:
-        #sorting edges can be used to determine the cutoff
-        #elarge = [(u, v) for (u, v, d) in g.edges(data=True) if d['weight'] > 2]
-        #esmall = [(u, v) for (u, v, d) in g.edges(data=True) if d['weight'] <= 2 and d['weight'] > .99] #move to args!
-        elarge = [(u, v) for (u, v, d) in g.edges(data=True) if d['weight'] > .5] #.5
-        esmall = [(u, v) for (u, v, d) in g.edges(data=True) if d['weight'] <= .5 and d['weight'] > .19] #move to args! 3, 1.9 .2
+        
+        
+        
+        elarge = [(u, v) for (u, v, d) in g.edges(data=True) if d['weight'] > .5] 
+        esmall = [(u, v) for (u, v, d) in g.edges(data=True) if d['weight'] <= .5 and d['weight'] > .19] 
         nx.draw_networkx_edges(g, layout, edgelist=elarge, width=3.5, ax=ax)
         nx.draw_networkx_edges(g, layout, edgelist=esmall, wifth=3, ax=ax)
     else:
@@ -257,14 +238,14 @@ def plot_confusion(tgt, pred, labels=None, name=''):
     """
     plt.clf()
     fig = plt.figure()
-    #if isinstance(L, torch.Tensor):        
-    #    L = L.cpu().numpy()
+    
+    
     ax = plt.gca()
     mx = sklearn.metrics.confusion_matrix(tgt, pred)
-    #pdb.set_trace()
+    
     img = plt.matshow(mx)
     path = 'data/confusion_mx_{}.jpg'.format(name)
-    #plt.imsave(path, img)
+    
     ax.legend()
     name2label = {'gw_cls':'GW', 'ot_cls':'COPT', 'combine_cls':'[COPT + GW]'}
     plt.title('{} Predictions'.format(name2label[name]), fontsize=20)
@@ -273,9 +254,6 @@ def plot_confusion(tgt, pred, labels=None, name=''):
 
 
 def plot_search_acc():
-    '''
-    Plot search acc. 
-    '''
     plt.clf()
     x_l = [1, 3, 5, 10, 15]
     ot_acc = [0.9721962,0.9866296,0.9941481333,0.998,0.998]
@@ -284,17 +262,17 @@ def plot_search_acc():
     svd_std = [0.01152346983,0.02409426815,0.02220130725,0.009109368462,0.009622514205] 
 
     fig = plt.figure()
-    #ax = ax
-    #plt.plot(x_l, ot_acc, '-o', label='COPT ')
+    
+    
     plt.errorbar(x_l, ot_acc, yerr=ot_std, marker='o', label='COPT sketches')
-    #plt.plot(x_l, svd_acc, '-*', label='SVD  ')
+    
     plt.errorbar(x_l, svd_acc, yerr=svd_std, marker='+', label='Spectral projections')
     
     plt.title('Classification acc of [COPT, GW] vs [spectral projections, GW] pipelines')
     plt.legend()
     plt.xlabel('Number of candidates allowed to 2nd stage')
     plt.ylabel('Classification accuracy')
-    path = 'data/search_acc.jpg'#.format(name)    
+    path = 'data/search_acc.jpg'
     fig.savefig(path)
     print('fig saved to ', path)
     
@@ -304,21 +282,14 @@ def create_dir(path):
     if not os.path.exists(path):
         os.mkdir(path)
     
-#create_dir(res_dir)
+
 
 def normalizedMI(ar1, ar2):
-    '''
-    normalized mutual information of two input cluserings.
-    Input: np arrays.
-    '''
     score = sklearn.metrics.normalized_mutual_info_score(ar1, ar2)
     return score
 
 
 def remove_edges(L, n_remove=1, seed=None):
-    '''
-    Adapted from GOT.
-    '''
     rng = np.random.RandomState(seed)
     
     G = lap_to_graph(L)
@@ -336,7 +307,7 @@ def remove_edges(L, n_remove=1, seed=None):
         if removed == n_remove:
             break
      
-    return graph_to_lap(G) #nx.laplacian_matrix(G).todense()
+    return graph_to_lap(G) 
 
 def permute_nodes(l1, seed=None):
     '''
@@ -348,28 +319,21 @@ def permute_nodes(l1, seed=None):
     P_true = np.eye(n)
     P_true = P_true[idx]
     l2 = np.array(P_true @ l1 @ P_true.T)
-    #pdb.set_trace()
-    return np.double(l2), idx #P_true
+    
+    return np.double(l2), idx 
 
 def symmetrize(mx, inplace=True):
-    """
-    Make the matrix symmetric (according to upper right). In place.
-    Input: torch tensor, square.
-    """
     m, n = mx.size()
     assert m == n    
     mask = torch.ones(m, m)
     mask = torch.tril(mask, diagonal=-1)    
-    #upper = torch.triu(mx).t()
+    
     if not inplace:
         mx = mx.clone()
     mx[mask > 0] = torch.triu(mx, diagonal=1).t()[mask > 0]        
     return mx
 
 def remove_isolates(g):
-    """
-    Remove isolated nodes from nx graph.
-    """
     g.remove_nodes_from(list(nx.isolates(g)))
 
 def load_data(fname):    
@@ -388,7 +352,7 @@ def parse_cls(st):
     return [int(i) for i in ar]
     
 def plot_confusions():
-    #plot_confusion(tgt, pred, labels=None, name=''):
+    
     ot_cls = '0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 1., 4., 1., 1., 4., 1., 1., 4., 1., 4., 4., 4., 4., 4., 4., 4., 4., 4., 4., 5., 5., 5., 5., 5., 5., 5., 5., 5., 5., 6., 6., 6., 6., 6., 6., 6., 6., 6., 6., 6., 9., 6., 9., 9., 9., 6., 6., 6., 9'
     gw_cls = '0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 6., 1., 1., 1., 1., 6., 6., 1., 6., 4., 4., 4., 4., 4., 4., 4., 4., 4., 4., 5., 5., 5., 5., 5., 5., 5., 5., 5., 5., 6., 5., 6., 6., 6., 6., 5., 6., 6., 6., 9., 9., 9., 9., 9., 9., 9., 9., 9., 9'
     combine_cls = '0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 1., 4., 1., 1., 4., 1., 1., 1., 1., 4., 4., 4., 4., 4., 4., 4., 4., 4., 4., 5., 5., 5., 5., 5., 5., 5., 5., 5., 5., 6., 5., 6., 6., 6., 6., 5., 6., 6., 6., 9., 9., 9., 9., 9., 9., 9., 9., 9., 9'
@@ -412,15 +376,15 @@ def plot_convergence():
     conv_ar = [float(f) for f in ar]
     x_l = [20*i for i in list(range(len(conv_ar)))]
     fig = plt.figure()
-    #plt.errorbar(x_l, ot_acc, yerr=ot_std, marker='o', label='COPT sketches')
+    
     plt.plot(x_l, conv_ar, '-o', label='COPT distance')
-    #plt.errorbar(x_l, svd_acc, yerr=svd_std, marker='+', label='Spectral projections')
+    
     
     plt.title('COPT distance convergence sketching a 50-node graph to 15 nodes')
     plt.legend()
     plt.xlabel('Number of iterations')
     plt.ylabel('COPT distance')
-    path = 'data/convergence.jpg'#.format(name)    
+    path = 'data/convergence.jpg'
     fig.savefig(path)
     print('fig saved to ', path)
     
@@ -433,8 +397,8 @@ if __name__ == '__main__':
     L = create_graph_lap(n)
     view_graph(L, soft_edge=True)
     '''
-    #plot_search_acc()
+    
     plot_cls_acc()
-    #plot_convergence()
-    #plot_confusions()
+    
+    
     
