@@ -7,9 +7,9 @@ We validate the proposed SGDD across 9 datasets and achieve state-of-the-art res
 
 # OS Requirements
 * Linux OS
-* Python 3.7
+* Python 3.8
 
-# Requirements
+# Pakage Requirements
 ```code
 torch==1.7.0
 torch_geometric==1.6.3
@@ -25,11 +25,11 @@ scikit_learn==1.0.2
 ```
 
 # Download Datasets
-Cora, Citeseer: [Pyg](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.datasets.Planetoid.html#torch_geometric.datasets.Planetoid)
-Reddit, Ogbn-arxiv, Flick: [GraphSAINT](https://github.com/GraphSAINT/GraphSAINT) [GCond](https://github.com/ChandlerBang/GCond)
-YelpChi: [DGL](https://docs.dgl.ai/en/latest/generated/dgl.data.FraudYelpDataset.html#dgl.data.FraudYelpDataset)
-Amazon: [DGL](https://docs.dgl.ai/en/latest/generated/dgl.data.FraudAmazonDataset.html#dgl.data.FraudAmazonDataset)
-DBLP, Citeseer: [Pyg](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.datasets.DBLP.html#torch_geometric.datasets.DBLP)
+* Cora, Citeseer: [Pyg](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.datasets.Planetoid.html#torch_geometric.datasets.Planetoid)
+* Reddit, Ogbn-arxiv, Flick: [GraphSAINT](https://github.com/GraphSAINT/GraphSAINT) [GCond](https://github.com/ChandlerBang/GCond)
+* YelpChi: [DGL](https://docs.dgl.ai/en/latest/generated/dgl.data.FraudYelpDataset.html#dgl.data.FraudYelpDataset)
+* Amazon: [DGL](https://docs.dgl.ai/en/latest/generated/dgl.data.FraudAmazonDataset.html#dgl.data.FraudAmazonDataset)
+* DBLP, Citeseer: [Pyg](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.datasets.DBLP.html#torch_geometric.datasets.DBLP)
 
 
 # Getting started
