@@ -12,7 +12,7 @@ from tqdm import tqdm
 from models.gcn import GCN
 from models.sgc import SGC
 from models.sgc_multi import SGC as SGC1
-# from models.parametrized_adj import PGE
+# from models.parametrized_adj import IGNR
 from models.IGNR import GraphonLearner as IGNR
 import scipy.sparse as sp
 from torch_sparse import SparseTensor
@@ -27,14 +27,15 @@ class SGDD:
         self.device = device
 
         # n = data.nclass * args.nsamples
-        n = int(data.feat_train.shape[0] * args.reduction_rate)
+        # n = int(data.feat_train.shape[0] * args.reduction_rate) * data.nclass
+        n = int(data.feat_train.shape[0] * args.reduction_rate) 
         # from collections import Counter; print(Counter(data.labels_train))
 
         d = data.feat_train.shape[1]
         self.nnodes_syn = n
         self.feat_syn = nn.Parameter(torch.FloatTensor(n, d).to(device))
 
-        # self.pge = PGE(nfeat=d, nnodes=n, device=device,args=args).to(device)
+        # self.IGNR = IGNR(nfeat=d, nnodes=n, device=device,args=args).to(device)
         self.IGNR = IGNR(node_feature=d, nfeat=128, nnodes=n, device=device, args=args).to(device)
         self.graphon = 1
 
@@ -43,7 +44,20 @@ class SGDD:
         self.reset_parameters()
         self.optimizer_feat = torch.optim.Adam([self.feat_syn], lr=args.lr_feat)
 
+        # self.optimizer_IGNR = torch.optim.Adam(self.IGNR.net0.parameters(), lr=args.lr_adj)
         self.optimizer_IGNR = torch.optim.Adam(self.IGNR.parameters(), lr=args.lr_adj)
+        # self.optimizer_ignr = torch.optim.Adam([*self.IGNR.net1.parameters(), self.IGNR.P], lr=args.lr_adj)
+        # self.optimizer_IGNR = torch.optim.AdamW([{"params":self.IGNR.net1.parameters(), "lr":1e-6}, 
+        #                                         {"params":self.IGNR.P.parameters(), "lr":1e-6"}, 
+        #                                         {"params":self.IGNR.net0.parameters(), "lr":args.lr_adj}], lr=args.lr_adj)
+        # [{"params":self.IGNR.net1.parameters(), "lr":1e-6}, {"params":self.IGNR.P.parameters(), "lr":1e-6"}, 
+        #                                         {"params":self.IGNR.net0.parameters(), "lr":args.lr_adj}]
+        # self.optimizer_IGNR = torch.optim.AdamW([
+        #             {'params': self.IGNR.net1.parameters(), 'lr': 1e-6}, 
+        #             {'params': self.IGNR.P, 'lr': 1e-6},
+        #             {'params': self.IGNR.net0.parameters()}],
+        #             lr=args.lr_adj,
+        #     )
         print('adj_syn:', (n,n), 'feat_syn:', self.feat_syn.shape)
 
     def reset_parameters(self):
@@ -93,17 +107,23 @@ class SGDD:
 
         adj_syn = IGNR.inference(feat_syn)
         args = self.args
-
+        
+        import os
+        if not os.path.exists('saved_ours'):
+            os.makedirs('saved_ours')
         if self.args.save:
             torch.save(adj_syn, f'saved_ours/adj_{args.dataset}_{args.reduction_rate}_{args.seed}.pt')
             torch.save(feat_syn, f'saved_ours/feat_{args.dataset}_{args.reduction_rate}_{args.seed}.pt')
+            torch.save(labels_syn, f'saved_ours/label_{args.dataset}_{args.reduction_rate}_{args.seed}.pt')
 
         if self.args.lr_adj == 0:
             n = len(labels_syn)
             adj_syn = torch.zeros((n, n))
 
+        # model.fit_with_val(feat_syn, adj_syn, labels_syn, data,
+        #              train_iters=600, normalize=True, verbose=False)
         model.fit_with_val(feat_syn, adj_syn, labels_syn, data,
-                     train_iters=600, normalize=True, verbose=False)
+                     train_iters=2000, normalize=False, verbose=True)
 
         model.eval()
         labels_test = torch.LongTensor(data.labels_test).cuda()
@@ -161,7 +181,6 @@ class SGDD:
         #     self.optimizer_ignr.zero_grad()
         #     adj_syn, opt_loss = IGNR(self.feat_syn, Lx=adj)
         #     # print(opt_loss.item())
-        #     wandb.log({'opt_loss': opt_loss.item()})
         #     opt_loss.backward()
         #     self.optimizer_ignr.step()
 
@@ -240,8 +259,9 @@ class SGDD:
                     loss += coeff  * match_loss(gw_syn, gw_real, args, device=self.device)
 
                 loss_avg += loss.item()
+                # TODO: regularize
                 if args.beta > 0:
-                    loss_reg = args.beta* regularization(adj_syn, utils.tensor2onehot(labels_syn))
+                    loss_reg = args.beta * regularization(adj_syn, utils.tensor2onehot(labels_syn).to(adj_syn.device))
                 else:
                     loss_reg = torch.tensor(0)
 
@@ -289,7 +309,7 @@ class SGDD:
 
             # eval_epochs = [400, 600, 800, 1000, 1200, 1600, 2000, 3000, 4000, 5000]
 
-            eval_epochs = list(range(400, 5000, 50))
+            eval_epochs = list(range(0, 5000, 50))
             if verbose and it in eval_epochs:
             # if verbose and (it+1) % 50 == 0:
                 res = []

@@ -14,16 +14,37 @@ import torch.nn.functional as F
 from sklearn.preprocessing import StandardScaler
 from deeprobust.graph.utils import *
 from torch_geometric.data import NeighborSampler
-from torch_geometric.utils import add_remaining_self_loops, to_undirected
-from torch_geometric.datasets import Planetoid
+from torch_geometric.utils import add_remaining_self_loops, to_undirected, remove_self_loops
+from torch_geometric.datasets import Planetoid, StochasticBlockModelDataset
+
+from typing import Any
+from dgl.data import FraudDataset
+
+try:
+    from oolongTool.PostMessage import Wechat
+    P = Wechat.P
+    __builtins__["P"] = P
+except:
+    P = "P"
 
 
-def get_dataset(name, normalize_features=False, transform=None, if_dpr=True):
+def get_dataset(name: str, normalize_features=False, transform=None, if_dpr=True):
     path = osp.join(osp.dirname(osp.realpath(__file__)), 'data', name)
     if name in ['cora', 'citeseer', 'pubmed']:
         dataset = Planetoid(path, name)
     elif name in ['ogbn-arxiv']:
         dataset = PygNodePropPredDataset(name='ogbn-arxiv')
+    elif name in ['yelpchi', 'amazon']:
+        name = 'yelp' if name == 'yelpchi' else 'amazon'
+        dataset = FraudDataset(name, raw_dir=path)
+        dataset = from_dgl(dataset[0], name=name, hetero=False)
+    elif name.lower() == "sbm":
+        num_nodes = [2000] * 3
+        edge_probs = [[0.1, 0.05, 0.02],
+                    [0.05, 0.1, 0.02],
+                    [0.02, 0.02, 0.1]]
+        dataset = StochasticBlockModelDataset(path, num_nodes, edge_probs, num_channels=32)
+        dataset.name = "SBM"
     else:
         raise NotImplementedError
 
@@ -35,7 +56,7 @@ def get_dataset(name, normalize_features=False, transform=None, if_dpr=True):
         dataset.transform = transform
 
     dpr_data = Pyg2Dpr(dataset)
-    if name in ['ogbn-arxiv']:
+    if name in ['ogbn-arxiv', 'sbm']:
         # the features are different from the features provided by GraphSAINT
         # normalize features, following graphsaint
         feat, idx_train = dpr_data.features, dpr_data.idx_train
@@ -56,11 +77,18 @@ class Pyg2Dpr(Dataset):
             pass
 
         dataset_name = pyg_data.name
-        pyg_data = pyg_data[0]
+        try:
+            pyg_data = pyg_data[0]
+        except TypeError:
+            pyg_data = pyg_data
         n = pyg_data.num_nodes
+
+        if not n:
+            n = pyg_data.x.shape[0]
 
         if dataset_name == 'ogbn-arxiv': # symmetrization
             pyg_data.edge_index = to_undirected(pyg_data.edge_index, pyg_data.num_nodes)
+            from torch_geometric.data import HeteroData
 
         self.adj = sp.csr_matrix((np.ones(pyg_data.edge_index.shape[1]),
             (pyg_data.edge_index[0], pyg_data.edge_index[1])), shape=(n, n))
@@ -380,4 +408,49 @@ def row_normalize_tensor(mx):
     mx = r_mat_inv @ mx
     return mx
 
+
+def from_dgl(g: Any, name: str, hetero=True):
+    import dgl, torch
+
+    from torch_geometric.data import Data, HeteroData
+
+    # if not isinstance(g, dgl.DGLGraph):
+    #     raise ValueError(f"Invalid data type (got '{type(g)}')")
+
+    if g.is_homogeneous:
+        data = Data()
+        data.edge_index = torch.stack(g.edges(), dim=0)
+
+        for attr, value in g.ndata.items():
+            data[attr] = value
+        for attr, value in g.edata.items():
+            data[attr] = value
+
+        return data
+
+    data = HeteroData()
+    data.name = name
+    data.num_nodes = g.number_of_nodes()
+
+    for node_type in g.ntypes:
+        for attr, value in g.nodes[node_type].data.items():
+            data[node_type][attr] = value
+
+    for edge_type in g.canonical_etypes:
+        row, col = g.edges(form="uv", etype=edge_type)
+        data[edge_type].edge_index = torch.stack([row, col], dim=0)
+        for attr, value in g.edge_attr_schemes(edge_type).items():
+            data[edge_type][attr] = value
+    
+    if not hetero:
+        edge_index_list = []
+        for edge_type in g.canonical_etypes:
+            edge_index_list.append(data[edge_type].edge_index)
+        data.edge_index = remove_self_loops(torch.cat(edge_index_list, dim=1))[0]
+
+        data.x = data.node_stores[0]['feature']
+
+        data.y = data.node_stores[0]['label']
+
+    return data
 
