@@ -15,9 +15,6 @@ from torch_sparse import SparseTensor
 
 
 class SageConvolution(Module):
-    """Simple GCN layer, similar to https://github.com/tkipf/pygcn
-    """
-
     def __init__(self, in_features, out_features, with_bias=True, root_weight=False):
         super(SageConvolution, self).__init__()
         self.in_features = in_features
@@ -42,8 +39,6 @@ class SageConvolution(Module):
         self.bias_r.data.uniform_(-stdv, stdv)
 
     def forward(self, input, adj, size=None):
-        """ Graph Convolutional Layer forward function
-        """
         if input.data.is_sparse:
             support = torch.spmm(input, self.weight_l)
         else:
@@ -162,8 +157,6 @@ class GraphSage(nn.Module):
 
 
     def initialize(self):
-        """Initialize parameters of GCN.
-        """
         for layer in self.layers:
             layer.reset_parameters()
         if self.with_bn:
@@ -292,12 +285,6 @@ class GraphSage(nn.Module):
         self.load_state_dict(weights)
 
     def test(self, idx_test):
-        """Evaluate GCN performance on test set.
-        Parameters
-        ----------
-        idx_test :
-            node testing indices
-        """
         self.eval()
         output = self.predict()
         # output = self.output
@@ -311,18 +298,6 @@ class GraphSage(nn.Module):
 
     @torch.no_grad()
     def predict(self, features=None, adj=None):
-        """By default, the inputs should be unnormalized adjacency
-        Parameters
-        ----------
-        features :
-            node features. If `features` and `adj` are not given, this function will use previous stored `features` and `adj` from training to make predictions.
-        adj :
-            adjcency matrix. If `features` and `adj` are not given, this function will use previous stored `features` and `adj` from training to make predictions.
-        Returns
-        -------
-        torch.FloatTensor
-            output (log probabilities) of GCN
-        """
 
         self.eval()
         if features is None and adj is None:

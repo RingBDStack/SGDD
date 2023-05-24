@@ -14,48 +14,6 @@ from torch_geometric.nn.inits import glorot, zeros
 
 
 class GATConv(MessagePassing):
-    r"""The graph attentional operator from the `"Graph Attention Networks"
-    <https://arxiv.org/abs/1710.10903>`_ paper
-
-    .. math::
-        \mathbf{x}^{\prime}_i = \alpha_{i,i}\mathbf{\Theta}\mathbf{x}_{i} +
-        \sum_{j \in \mathcal{N}(i)} \alpha_{i,j}\mathbf{\Theta}\mathbf{x}_{j},
-
-    where the attention coefficients :math:`\alpha_{i,j}` are computed as
-
-    .. math::
-        \alpha_{i,j} =
-        \frac{
-        \exp\left(\mathrm{LeakyReLU}\left(\mathbf{a}^{\top}
-        [\mathbf{\Theta}\mathbf{x}_i \, \Vert \, \mathbf{\Theta}\mathbf{x}_j]
-        \right)\right)}
-        {\sum_{k \in \mathcal{N}(i) \cup \{ i \}}
-        \exp\left(\mathrm{LeakyReLU}\left(\mathbf{a}^{\top}
-        [\mathbf{\Theta}\mathbf{x}_i \, \Vert \, \mathbf{\Theta}\mathbf{x}_k]
-        \right)\right)}.
-
-    Args:
-        in_channels (int or tuple): Size of each input sample. A tuple
-            corresponds to the sizes of source and target dimensionalities.
-        out_channels (int): Size of each output sample.
-        heads (int, optional): Number of multi-head-attentions.
-            (default: :obj:`1`)
-        concat (bool, optional): If set to :obj:`False`, the multi-head
-            attentions are averaged instead of concatenated.
-            (default: :obj:`True`)
-        negative_slope (float, optional): LeakyReLU angle of the negative
-            slope. (default: :obj:`0.2`)
-        dropout (float, optional): Dropout probability of the normalized
-            attention coefficients which exposes each node to a stochastically
-            sampled neighborhood during training. (default: :obj:`0`)
-        add_self_loops (bool, optional): If set to :obj:`False`, will not add
-            self-loops to the input graph. (default: :obj:`True`)
-        bias (bool, optional): If set to :obj:`False`, the layer will not learn
-            an additive bias. (default: :obj:`True`)
-        **kwargs (optional): Additional arguments of
-            :class:`torch_geometric.nn.conv.MessagePassing`.
-    """
-    _alpha: OptTensor
 
     def __init__(self, in_channels: Union[int, Tuple[int, int]],
                  out_channels: int, heads: int = 1, concat: bool = True,
@@ -103,17 +61,6 @@ class GATConv(MessagePassing):
 
     def forward(self, x: Union[Tensor, OptPairTensor], edge_index: Adj,
                 size: Size = None, return_attention_weights=None, edge_weight=None):
-        # type: (Union[Tensor, OptPairTensor], Tensor, Size, NoneType) -> Tensor  # noqa
-        # type: (Union[Tensor, OptPairTensor], SparseTensor, Size, NoneType) -> Tensor  # noqa
-        # type: (Union[Tensor, OptPairTensor], Tensor, Size, bool) -> Tuple[Tensor, Tuple[Tensor, Tensor]]  # noqa
-        # type: (Union[Tensor, OptPairTensor], SparseTensor, Size, bool) -> Tuple[Tensor, SparseTensor]  # noqa
-        r"""
-        Args:
-            return_attention_weights (bool, optional): If set to :obj:`True`,
-                will additionally return the tuple
-                :obj:`(edge_index, attention_weights)`, holding the computed
-                attention weights for each edge. (default: :obj:`None`)
-        """
         H, C = self.heads, self.out_channels
 
         x_l: OptTensor = None

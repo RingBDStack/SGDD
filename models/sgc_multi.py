@@ -1,4 +1,3 @@
-"""multiple transformaiton and multiple propagation"""
 import torch.nn as nn
 import torch.nn.functional as F
 import math
@@ -18,7 +17,6 @@ class SGC(nn.Module):
     def __init__(self, nfeat, nhid, nclass, nlayers=2, dropout=0.5, lr=0.01, weight_decay=5e-4,
             ntrans=2, with_bias=True, with_bn=False, device=None):
 
-        """nlayers indicates the number of propagations"""
         super(SGC, self).__init__()
 
         assert device is not None, "Please specify 'device'!"
@@ -110,8 +108,6 @@ class SGC(nn.Module):
 
 
     def initialize(self):
-        """Initialize parameters of GCN.
-        """
         for layer in self.layers:
             layer.reset_parameters()
         if self.with_bn:
@@ -119,7 +115,6 @@ class SGC(nn.Module):
                 bn.reset_parameters()
 
     def fit_with_val(self, features, adj, labels, data, train_iters=200, initialize=True, verbose=False, normalize=True, patience=None, noval=False, **kwargs):
-        '''data: full data class'''
         if initialize:
             self.initialize()
 
@@ -213,12 +208,6 @@ class SGC(nn.Module):
 
 
     def test(self, idx_test):
-        """Evaluate GCN performance on test set.
-        Parameters
-        ----------
-        idx_test :
-            node testing indices
-        """
         self.eval()
         output = self.predict()
         # output = self.output
@@ -232,18 +221,6 @@ class SGC(nn.Module):
 
     @torch.no_grad()
     def predict(self, features=None, adj=None):
-        """By default, the inputs should be unnormalized adjacency
-        Parameters
-        ----------
-        features :
-            node features. If `features` and `adj` are not given, this function will use previous stored `features` and `adj` from training to make predictions.
-        adj :
-            adjcency matrix. If `features` and `adj` are not given, this function will use previous stored `features` and `adj` from training to make predictions.
-        Returns
-        -------
-        torch.FloatTensor
-            output (log probabilities) of GCN
-        """
 
         self.eval()
         if features is None and adj is None:
@@ -275,8 +252,6 @@ class SGC(nn.Module):
 
 
 class MyLinear(Module):
-    """Simple Linear layer, modified from https://github.com/tkipf/pygcn
-    """
 
     def __init__(self, in_features, out_features, with_bias=True):
         super(MyLinear, self).__init__()

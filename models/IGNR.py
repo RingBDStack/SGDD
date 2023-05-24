@@ -6,9 +6,6 @@ from itertools import product
 from graph import mx_inv, mx_inv_sqrt, mx_tr
 
 def get_mgrid(sidelen, dim=2):
-    '''Generates a flattened grid of (x,y,...) coordinates in a range of -1 to 1.
-    Vincent Sitzmann et al. “Implicit Neural Representations with Periodic Activation Functions” Neural Information Processing Systems(2020): n. pag.
-    '''
     if isinstance(sidelen, int):
         sidelen = dim * (sidelen,)
 
@@ -30,9 +27,6 @@ def get_mgrid(sidelen, dim=2):
     return pixel_coords.to(torch.float32)
 
 class Sine(nn.Module):
-    """
-    Vincent Sitzmann et al. “Implicit Neural Representations with Periodic Activation Functions” Neural Information Processing Systems(2020): n. pag.
-    """
     def __init__(self):
         super().__init__()
 
@@ -52,8 +46,6 @@ class EdgeBlock(nn.Module):
 
 
 class GraphonLearner(nn.Module):
-    """
-    """
     def __init__(self, node_feature, nfeat=256, nnodes=50, device="cuda", args={}, num_hidden_layers=3, **kwargs):
         super().__init__()
         self.num_hidden_layers = num_hidden_layers
@@ -93,9 +85,6 @@ class GraphonLearner(nn.Module):
         self.apply(weight_reset)
     
     def forward(self, c, inference=False, Lx=None):
-        """
-        c: condition, in the paper setting, it means the node embedding
-        """
         if inference == True:
             self.eval()
         else:

@@ -167,7 +167,6 @@ class SingleBVPNet(MetaModule):
 
 
 class PINNet(nn.Module):
-    '''Architecture used by Raissi et al. 2019.'''
 
     def __init__(self, out_features=1, type='tanh', in_features=2, mode='mlp'):
         super().__init__()
@@ -186,7 +185,6 @@ class PINNet(nn.Module):
 
 
 class ImageDownsampling(nn.Module):
-    '''Generate samples in u,v plane according to downsampling blur kernel'''
 
     def __init__(self, sidelength, downsample=False):
         super().__init__()
@@ -220,7 +218,6 @@ class ImageDownsampling(nn.Module):
 
 
 class PosEncodingNeRF(nn.Module):
-    '''Module to add positional encoding as in NeRF [Mildenhall et al. 2020].'''
     def __init__(self, in_features, sidelength=None, fn_samples=None, use_nyquist=True):
         super().__init__()
 
@@ -264,9 +261,6 @@ class PosEncodingNeRF(nn.Module):
 
 
 class RBFLayer(nn.Module):
-    '''Transforms incoming data using a given radial basis function.
-        - Input: (1, N, in_features) where N is an arbitrary batch size
-        - Output: (1, N, out_features) where N is an arbitrary batch size'''
 
     def __init__(self, in_features, out_features):
         super().__init__()
@@ -412,7 +406,6 @@ class PartialConvImgEncoder(nn.Module):
 
 
 class Conv2dResBlock(nn.Module):
-    '''Aadapted from https://github.com/makora9143/pytorch-convcnp/blob/master/convcnp/modules/resblock.py'''
     def __init__(self, in_channel, out_channel=128):
         super().__init__()
         self.convs = nn.Sequential(
@@ -506,7 +499,6 @@ class PartialConv2d(nn.Conv2d):
 
 
 def conv3x3(in_planes, out_planes, stride=1):
-    """3x3 convolution with padding"""
     return PartialConv2d(in_planes, out_planes, kernel_size=3, stride=stride,
                          padding=1, bias=False)
 
@@ -543,12 +535,7 @@ class BasicBlock(nn.Module):
         return out
 
 
-########################
-# Initialization methods
 def _no_grad_trunc_normal_(tensor, mean, std, a, b):
-    # For PINNet, Raissi et al. 2019
-    # Method based on https://people.sc.fsu.edu/~jburkardt/presentations/truncated_normal.pdf
-    # grab from upstream pytorch branch and paste here for now
     def norm_cdf(x):
         # Computes standard normal cumulative distribution function
         return (1. + math.erf(x / math.sqrt(2.))) / 2.
@@ -578,18 +565,12 @@ def _no_grad_trunc_normal_(tensor, mean, std, a, b):
 
 
 def init_weights_trunc_normal(m):
-    # For PINNet, Raissi et al. 2019
-    # Method based on https://people.sc.fsu.edu/~jburkardt/presentations/truncated_normal.pdf
     if type(m) == BatchLinear or type(m) == nn.Linear:
         if hasattr(m, 'weight'):
             fan_in = m.weight.size(1)
             fan_out = m.weight.size(0)
             std = math.sqrt(2.0 / float(fan_in + fan_out))
             mean = 0.
-            # initialize with the same behavior as tf.truncated_normal
-            # "The generated values follow a normal distribution with specified mean and
-            # standard deviation, except that values whose magnitude is more than 2
-            # standard deviations from the mean are dropped and re-picked."
             _no_grad_trunc_normal_(m.weight, mean, std, -2 * std, 2 * std)
 
 

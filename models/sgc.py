@@ -13,8 +13,6 @@ from torch.nn import init
 import torch_sparse
 
 class GraphConvolution(Module):
-    """Simple GCN layer, similar to https://github.com/tkipf/pygcn
-    """
 
     def __init__(self, in_features, out_features, with_bias=True):
         super(GraphConvolution, self).__init__()
@@ -32,8 +30,6 @@ class GraphConvolution(Module):
             self.bias.data.uniform_(-stdv, stdv)
 
     def forward(self, input, adj):
-        """ Graph Convolutional Layer forward function
-        """
         if input.data.is_sparse:
             support = torch.spmm(input, self.weight)
         else:
@@ -126,15 +122,12 @@ class SGC(nn.Module):
             return F.log_softmax(x, dim=1)
 
     def initialize(self):
-        """Initialize parameters of GCN.
-        """
         self.conv.reset_parameters()
         if self.with_bn:
             for bn in self.bns:
                 bn.reset_parameters()
 
     def fit_with_val(self, features, adj, labels, data, train_iters=200, initialize=True, verbose=False, normalize=True, patience=None, noval=False, **kwargs):
-        '''data: full data class'''
         if initialize:
             self.initialize()
 
@@ -228,12 +221,6 @@ class SGC(nn.Module):
 
 
     def test(self, idx_test):
-        """Evaluate GCN performance on test set.
-        Parameters
-        ----------
-        idx_test :
-            node testing indices
-        """
         self.eval()
         output = self.predict()
         # output = self.output
@@ -247,18 +234,6 @@ class SGC(nn.Module):
 
     @torch.no_grad()
     def predict(self, features=None, adj=None):
-        """By default, the inputs should be unnormalized adjacency
-        Parameters
-        ----------
-        features :
-            node features. If `features` and `adj` are not given, this function will use previous stored `features` and `adj` from training to make predictions.
-        adj :
-            adjcency matrix. If `features` and `adj` are not given, this function will use previous stored `features` and `adj` from training to make predictions.
-        Returns
-        -------
-        torch.FloatTensor
-            output (log probabilities) of GCN
-        """
 
         self.eval()
         if features is None and adj is None:

@@ -1,6 +1,3 @@
-"""
-Extended from https://github.com/rusty1s/pytorch_geometric/tree/master/benchmark/citation
-"""
 import torch.nn as nn
 import torch.nn.functional as F
 import math
@@ -90,8 +87,6 @@ class GAT(torch.nn.Module):
 
 
     def initialize(self):
-        """Initialize parameters of GAT.
-        """
         self.conv1.reset_parameters()
         self.conv2.reset_parameters()
 
@@ -183,8 +178,6 @@ class GAT(torch.nn.Module):
         self.load_state_dict(weights)
 
     def test(self, data_test):
-        """Evaluate GCN performance
-        """
         self.eval()
         with torch.no_grad():
             output = self.forward(data_test)

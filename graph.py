@@ -195,9 +195,6 @@ class GraphDist(nn.Module):
         return loss.clamp(min=0), P, Ly
 
 def realize_upper(upper, sz, take_ly_exp=False):
-    """
-    Create Laplacian from *log* of upper triangular part.
-    """
     ones = torch.ones(sz, sz, dtype=torch.uint8)
     Ly = torch.zeros(sz, sz)
     if take_ly_exp:
@@ -240,33 +237,15 @@ def mx_tr(mx):
     return mx.diag().sum()
 
 def mx_svd(mx, topk):
-    """
-    canonicalize the mx to target topk dim.
-    Take SVD, take eigenvectors corresponding to smallest topk non zero evals, 
-    Assuming input mx has 0 as eval, i.e. Laplacian mx.
-    """
     U, D, V = torch.svd(mx) 
     #topk x m
     evecs = U.t()[-topk-1:-1]
-    '''
-    col1 = evecs[:, 0]
-    idx = torch.argsort(col1)
-    evecs = evecs[idx]
-    '''
     row1 = evecs[-1, :]
     idx = torch.argsort(row1)
     evecs = evecs[:, idx]
     return evecs 
 
 def graph_dist(args, plot=True, Ly=None, take_ly_exp=True):
-    """
-    Input: 
-    args: arguments. Should contain Lx as an attribute.
-    Lx and Ly are graph Laplacians, Lx being the input, origin graph,
-        Ly the Laplacian of the target graph to be compared with.
-        If sketching graph X, Ly should be None.
-    
-    """
     args.Lx = args.Lx.to(device)
     args.plot = plot
     model = GraphDist(args.Lx, args.m, args.n, args, Ly=Ly, take_ly_exp=take_ly_exp)
@@ -282,9 +261,6 @@ def graph_dist(args, plot=True, Ly=None, take_ly_exp=True):
     return loss, P, Ly
 
 def visualize_graph(graph_type, args):
-    """
-    Can be used to visualize graph sketch. args should have args.Lx attribute, the input graph Laplacian..
-    """
     g = utils.create_graph(args.m, graph_type)
     args.Lx = utils.graph_to_lap(g).to(device)
     args.m = len(args.Lx)
@@ -302,9 +278,6 @@ def visualize_graph(graph_type, args):
     return loss, P, Ly
     
 if __name__ == '__main__':
-    """
-    Miscellaneous scripts for testing and visualizing COPT functionalities.
-    """
     args = utils.parse_args()
     args.m = 11 #5 6 5 12 (barbell)
     args.n = 9 #5 3 6 6

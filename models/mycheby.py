@@ -16,11 +16,8 @@ import numpy as np
 
 
 class ChebConvolution(Module):
-    """Simple GCN layer, similar to https://github.com/tkipf/pygcn
-    """
 
     def __init__(self, in_features, out_features, with_bias=True, single_param=True, K=2):
-        """set single_param to True to alleivate the overfitting issue"""
         super(ChebConvolution, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
@@ -41,8 +38,6 @@ class ChebConvolution(Module):
         zeros(self.bias)
 
     def forward(self, input, adj, size=None):
-        """ Graph Convolutional Layer forward function
-        """
         # support = torch.mm(input, self.weight_l)
         x = input
         Tx_0 = x[:size[1]] if size is not None else x
@@ -176,8 +171,6 @@ class Cheby(nn.Module):
 
 
     def initialize(self):
-        """Initialize parameters of GCN.
-        """
         for layer in self.layers:
             layer.reset_parameters()
         if self.with_bn:
@@ -185,7 +178,6 @@ class Cheby(nn.Module):
                 bn.reset_parameters()
 
     def fit_with_val(self, features, adj, labels, data, train_iters=200, initialize=True, verbose=False, normalize=True, patience=None, noval=False, **kwargs):
-        '''data: full data class'''
         if initialize:
             self.initialize()
 
@@ -286,12 +278,6 @@ class Cheby(nn.Module):
         self.load_state_dict(weights)
 
     def test(self, idx_test):
-        """Evaluate GCN performance on test set.
-        Parameters
-        ----------
-        idx_test :
-            node testing indices
-        """
         self.eval()
         output = self.predict()
         # output = self.output
@@ -305,18 +291,6 @@ class Cheby(nn.Module):
 
     @torch.no_grad()
     def predict(self, features=None, adj=None):
-        """By default, the inputs should be unnormalized adjacency
-        Parameters
-        ----------
-        features :
-            node features. If `features` and `adj` are not given, this function will use previous stored `features` and `adj` from training to make predictions.
-        adj :
-            adjcency matrix. If `features` and `adj` are not given, this function will use previous stored `features` and `adj` from training to make predictions.
-        Returns
-        -------
-        torch.FloatTensor
-            output (log probabilities) of GCN
-        """
 
         self.eval()
         if features is None and adj is None:
@@ -351,8 +325,6 @@ class Cheby(nn.Module):
             return self.forward(self.features, self.adj_norm)
 
 class MyLinear(Module):
-    """Simple Linear layer, modified from https://github.com/tkipf/pygcn
-    """
 
     def __init__(self, in_features, out_features, with_bias=True):
         super(MyLinear, self).__init__()
@@ -391,20 +363,6 @@ class MyLinear(Module):
 
 
 def normalize_adj(mx):
-    """Normalize sparse adjacency matrix,
-    A' = (D + I)^-1/2 * ( A + I ) * (D + I)^-1/2
-    Row-normalize sparse matrix
-    Parameters
-    ----------
-    mx : scipy.sparse.csr_matrix
-        matrix to be normalized
-    Returns
-    -------
-    scipy.sprase.lil_matrix
-        normalized matrix
-    """
-
-    # TODO: maybe using coo format would be better?
     if type(mx) is not sp.lil.lil_matrix:
         mx = mx.tolil()
     mx = mx + sp.eye(mx.shape[0])

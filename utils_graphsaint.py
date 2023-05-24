@@ -10,7 +10,6 @@ from itertools import repeat
 from torch_geometric.data import NeighborSampler
 
 class DataGraphSAINT:
-    '''datasets used in GraphSAINT paper'''
 
     def __init__(self, dataset, **kwargs):
         dataset_str='data/'+dataset+'/'

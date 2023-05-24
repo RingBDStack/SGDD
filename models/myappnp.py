@@ -1,4 +1,3 @@
-"""multiple transformaiton and multiple propagation"""
 import torch.nn as nn
 import torch.nn.functional as F
 import math
@@ -125,8 +124,6 @@ class APPNP(nn.Module):
 
 
     def initialize(self):
-        """Initialize parameters of GCN.
-        """
         for layer in self.layers:
             layer.reset_parameters()
         if self.with_bn:
@@ -230,12 +227,6 @@ class APPNP(nn.Module):
 
 
     def test(self, idx_test):
-        """Evaluate GCN performance on test set.
-        Parameters
-        ----------
-        idx_test :
-            node testing indices
-        """
         self.eval()
         output = self.predict()
         # output = self.output
@@ -249,18 +240,6 @@ class APPNP(nn.Module):
 
     @torch.no_grad()
     def predict(self, features=None, adj=None):
-        """By default, the inputs should be unnormalized adjacency
-        Parameters
-        ----------
-        features :
-            node features. If `features` and `adj` are not given, this function will use previous stored `features` and `adj` from training to make predictions.
-        adj :
-            adjcency matrix. If `features` and `adj` are not given, this function will use previous stored `features` and `adj` from training to make predictions.
-        Returns
-        -------
-        torch.FloatTensor
-            output (log probabilities) of GCN
-        """
 
         self.eval()
         if features is None and adj is None:
@@ -292,8 +271,6 @@ class APPNP(nn.Module):
 
 
 class MyLinear(Module):
-    """Simple Linear layer, modified from https://github.com/tkipf/pygcn
-    """
 
     def __init__(self, in_features, out_features, with_bias=True):
         super(MyLinear, self).__init__()
