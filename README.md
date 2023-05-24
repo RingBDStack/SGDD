@@ -46,7 +46,7 @@ pip install -r ./requirements.txt
 
 * Train the model (setting dataset to your dataset name)
 ```
-python train_SGDD.py --dataset ${dataset} --sgc 0 --nlayers=2 --lr_feat=1e-4 --alpha 0.1 --beta 0.1 --lr_adj=1e-4 --r=0.5 --gpu_id=0
+python train_SGDD.py --dataset ${dataset}  --nlayers=2 -beta 0.1 --r=0.5 --gpu_id=0
 ```
 
 
