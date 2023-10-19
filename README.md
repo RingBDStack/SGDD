@@ -1,5 +1,10 @@
 # SGDD: Does Graph Distillation See Like Vision Dataset Counterpart?
 
+Official implementation of "[Does Graph Distillation See Like Vision Dataset Counterpart](http://arxiv.org/abs/2310.09192)", published as a conference paper at NeurIPS 2023.
+
+The authors of this paper are: Beining Yang*, Kai Wang*, Qingyun Sun, Cheng Ji, Xingcheng Fu, Hao Tang, Yang You, Jianxin Li
+![Does Graph Distillation See Like Vision Dataset Counterpart?](./images/yang2023does.png)
+
 # Abstract
 Training on large-scale graphs has achieved remarkable results in graph representation learning, but its cost and storage have attracted increasing concerns. Existing graph condensation methods primarily focus on optimizing the feature matrices of condensed graphs while overlooking the impact of the structure information from the original graphs. To investigate the impact of the structure information, we conduct analysis from the spectral domain and empirically identify substantial Laplacian Energy Distribution (LED) shifts in previous works. Such shifts lead to poor performance in cross-architecture generalization and specific tasks, including anomaly detection and link prediction. In this paper, we propose a novel Structure-broadcasting Graph Dataset Distillation (\textbf{SGDD}) scheme for broadcasting the original structure information to the generation of the synthetic one, which explicitly prevents overlooking the original structure information. 
 Theoretically, the synthetic graphs by SGDD are expected to have smaller LED shifts than previous works, leading to superior performance in both cross-architecture settings and specific tasks.

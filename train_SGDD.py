@@ -10,11 +10,11 @@ from SGDD_agent import SGDD
 from utils_graphsaint import DataGraphSAINT
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--gpu_id', type=int, default=0, help='gpu id')
-parser.add_argument('--dataset', type=str, default='cora')
+parser.add_argument('--gpu_id', type=int, default=7, help='gpu id')
+# parser.add_argument('--dataset', type=str, default='cora')
 # parser.add_argument('--dataset', type=str, default='citeseer')
 # parser.add_argument('--dataset', type=str, default='flickr')
-# parser.add_argument('--dataset', type=str, default='ogbn-arxiv')
+parser.add_argument('--dataset', type=str, default='ogbn-arxiv')
 # parser.add_argument('--dataset', type=str, default='yelpchi')
 # parser.add_argument('--dataset', type=str, default='sbm')
 parser.add_argument('--dis_metric', type=str, default='ours')
